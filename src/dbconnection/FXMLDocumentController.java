@@ -15,7 +15,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -65,6 +64,8 @@ public class FXMLDocumentController implements Initializable {
     ObservableList<Person> tableSelection;
     
     private final ListChangeListener<Person> tableSelectionChanged;
+    
+    int currentId;   // takes care of assigning ids to newly created objects
 
     public FXMLDocumentController() {
         this.tableSelectionChanged = (ListChangeListener.Change<? extends Person> c) -> {
@@ -110,23 +111,26 @@ public class FXMLDocumentController implements Initializable {
         hideTextFields();
 
         ConnectionClass cc = new ConnectionClass();
-        Connection con = cc.getConnection();
-        try{
+        
+        try(Connection con = cc.getConnection()){
         String sql = "Select * from people";
         Statement stmt = con.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
         
         while (rs.next()){
-            String firstName = rs.getString(1);
-            String lastName = rs.getString(2);
-            String phone = rs.getString(3);
-            String email = rs.getString(4);
-            Person temp = new Person(firstName, lastName, phone, email, people.size());
+            int id = rs.getInt(1);
+            String firstName = rs.getString(2);
+            String lastName = rs.getString(3);
+            String phone = rs.getString(4);
+            String email = rs.getString(5);
+            Person temp = new Person(firstName, lastName, phone, email, id);
             people.add(temp);
         }
         }
         catch(Exception e){
+            e.printStackTrace();
         }
+        currentId = people.size();
                 
         colFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         colLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
@@ -156,20 +160,20 @@ public class FXMLDocumentController implements Initializable {
     deletePerson.setDisable(true);
     updatePerson.setDisable(true);
     
-                                                                // newPlayer Button
+                                                                // newPerson Button
     newPerson.setOnAction((ActionEvent e) -> {
         table.getSelectionModel().clearSelection();
         showTextFields();
         //clearFields();
         addPerson.setDisable(false);
     });
-                                                               //addPlayer Button
+                                                               //addPerson Button
     addPerson.setOnAction((ActionEvent e) -> {
         Person temp = new Person(firstNameField.getText(),
                 lastNameField.getText(),
                 phoneField.getText(),
                 emailField.getText(),
-                people.size()
+                ++currentId
         );
         
         people.add(temp);
@@ -179,7 +183,7 @@ public class FXMLDocumentController implements Initializable {
         hideTextFields();
     });
     
-                                                              // updatePlayer Button
+                                                              // updatePerson Button
     updatePerson.setOnAction((ActionEvent e) -> {
         if (tableSelection!= null && !tableSelection.isEmpty()){
             Person temp = tableSelection.get(0);
@@ -193,6 +197,22 @@ public class FXMLDocumentController implements Initializable {
                     people.add(i, temp);
                 }
             }
+            
+            ConnectionClass cc = new ConnectionClass();
+            try(Connection con = cc.getConnection()){
+                String sql = "Update people "
+                        + "set firstname = '" + temp.getFirstName()
+                        + "', lastname = '" + temp.getLastName()
+                        + "', phonenumber = '" + temp.getPhone()
+                        + "', email = '" + temp.getEmail()
+                        + "' where id = " + temp.getId();
+                Statement stmt = con.createStatement();
+                stmt.execute(sql);
+            }
+            catch (Exception ex){
+                ex.printStackTrace();
+            }
+            
             ObservableList<Person> tempPeople = FXCollections.observableArrayList(people);
             
             //int selectedRowIndex = table.getSelectionModel().getSelectedIndex();
@@ -204,7 +224,7 @@ public class FXMLDocumentController implements Initializable {
             people = tempPeople;
         }
     });
-                                                               // deletePlayer Button
+                                                               // deletePerson Button
     deletePerson.setOnAction((ActionEvent e) -> {
         if (tableSelection!= null && !tableSelection.isEmpty()){
             Person temp = tableSelection.get(0);
@@ -213,6 +233,18 @@ public class FXMLDocumentController implements Initializable {
                     people.remove(i, i+1);                    
                 }
             }
+            
+            ConnectionClass cc = new ConnectionClass();
+            try(Connection con = cc.getConnection()){
+                String sql = "Delete from people "
+                        + " where id = " + temp.getId();
+                Statement stmt = con.createStatement();
+                stmt.execute(sql);
+            }
+            catch (Exception ex){
+                ex.printStackTrace();
+            }
+            
             ObservableList<Person> tempPeople = FXCollections.observableArrayList(people);
             
             table.getSelectionModel().clearSelection();
@@ -229,7 +261,7 @@ public class FXMLDocumentController implements Initializable {
         hideTextFields();
     });
     
-                                                                 // clonePlayer Button
+                                                                 // clonePerson Button
     clonePerson.setOnAction((ActionEvent e) -> {
         if (tableSelection!= null && !tableSelection.isEmpty()){
             Person temp = tableSelection.get(0);
@@ -237,7 +269,7 @@ public class FXMLDocumentController implements Initializable {
                     temp.getLastName(),
                     temp.getPhone(),
                     temp.getEmail(),
-                    people.size()));
+                    ++currentId));
         }
     });
     
