@@ -291,34 +291,34 @@ public class FXMLDocumentController implements Initializable {
                                                                  // clonePerson Button
     clonePerson.setOnAction((ActionEvent e) -> {
         if (tableSelection!= null && !tableSelection.isEmpty()){
-            Person temp = tableSelection.get(0);
-            temp.setId(++currentId);
-            people.add(new Person(temp.getFirstName(),
-                    temp.getLastName(),
-                    temp.getPhone(),
-                    temp.getEmail(),
-                    temp.getId()));
+            Person selected = tableSelection.get(0);
+            Person temp = new Person(selected.getFirstName(),
+                    selected.getLastName(),
+                    selected.getPhone(),
+                    selected.getEmail(),
+                    ++currentId);
+            people.add(temp);
                     
-                    ConnectionClass cc = new ConnectionClass();          // Committing changes to the database
-                    try(Connection con = cc.getConnection()){
-                        String sql = "Insert into people(id, firstname, lastname, phonenumber, email) values("
-                                + temp.getId()
-                                + ", '" + temp.getFirstName()
-                                + "', '" + temp.getLastName()
-                                + "', '" + temp.getPhone()
-                                + "', '" + temp.getEmail() + "')";
-                        Statement stmt = con.createStatement();
-                        stmt.execute(sql);
-                        
-                        /*String sql1 = "Select count(*) from people";
-                        ResultSet rs = stmt.executeQuery(sql1);
-                        rs.next();
-                        System.out.println("Id: " + temp.getId());
-                        System.out.println(rs.getInt(1));*/
-                    }
-                    catch (Exception ex){
-                        ex.printStackTrace();
-                    }
+            ConnectionClass cc = new ConnectionClass();          // Committing changes to the database
+            try(Connection con = cc.getConnection()){
+                String sql = "Insert into people(id, firstname, lastname, phonenumber, email) values("
+                        + temp.getId()
+                        + ", '" + temp.getFirstName()
+                        + "', '" + temp.getLastName()
+                        + "', '" + temp.getPhone()
+                        + "', '" + temp.getEmail() + "')";
+                Statement stmt = con.createStatement();
+                stmt.execute(sql);
+
+                /*String sql1 = "Select count(*) from people";
+                ResultSet rs = stmt.executeQuery(sql1);
+                rs.next();
+                System.out.println("Id: " + temp.getId());
+                System.out.println(rs.getInt(1));*/
+            }
+            catch (Exception ex){
+                ex.printStackTrace();
+            }
         } 
         
         
