@@ -1,4 +1,2 @@
-This project explores JavaFX user interface API to create a simple application that connects to a database,
-retrieves a set of objects of Person class, allows the user to update, delete, or clone the existing objects or create a new one.
-
-All changes are commited back to the database.
+This project uses JavaFX to create UI and a low-level jdbc to connect to a local database.It
+retrieves a set of objects and allows the user do CRUD operations on them
